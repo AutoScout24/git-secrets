@@ -46,3 +46,14 @@ load test_helper
   run git commit -m 'This is also fine'
   [ $status -eq 0 ]
 }
+
+@test "Resolve pattern provider when scan is called as part of commit hook" {
+  setup_bad_repo
+  git config --unset-all secrets.patterns || true
+  repo_run git-secrets --install $TEST_REPO
+  repo_run git-secrets --add-provider -- echo "forbidden"
+  cd $TEST_REPO
+  run git commit -m 'Contents are bad not the message'
+  [ $status -eq 1 ]
+  [ "${lines[0]}" == "failure1.txt:1:another line... forbidden" ]
+}
