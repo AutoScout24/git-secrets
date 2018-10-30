@@ -245,6 +245,18 @@ load test_helper
   [ $status -eq 1 ]
 }
 
+@test "Comment lines must be ignored in .gitallowed files" {
+  setup_bad_repo_with_hash
+  repo_run git-secrets --scan
+  [ $status -eq 1 ]
+  echo '#hash' > $TEST_REPO/.gitallowed
+  repo_run git-secrets --scan
+  [ $status -eq 1 ]
+  echo 'hash' > $TEST_REPO/.gitallowed
+  repo_run git-secrets --scan
+  [ $status -eq 0 ]
+}
+
 @test "Scans all files and allowing none of the bad patterns in .gitallowed" {
   setup_bad_repo
   echo 'hello' > $TEST_REPO/.gitallowed
@@ -266,7 +278,7 @@ load test_helper
   repo_run git-secrets --register-aws
   git config --local --get secrets.providers
   repo_run git-secrets --list
-  echo "$output" | grep -F '[A-Z0-9]{20}'
+  echo "$output" | grep -F '(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'
   echo "$output" | grep "AKIAIOSFODNN7EXAMPLE"
   echo "$output" | grep "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 }
@@ -287,6 +299,18 @@ load test_helper
   echo "$output" | grep -F 'bam'
 }
 
+@test "Strips providers that return nothing" {
+  repo_run git-secrets --add-provider -- 'echo'
+  [ $status -eq 0 ]
+  repo_run git-secrets --add-provider -- 'echo 123'
+  [ $status -eq 0 ]
+  repo_run git-secrets --list
+  echo "$output" | grep -F 'echo 123'
+  echo 'foo' > $TEST_REPO/bad_file
+  repo_run git-secrets --scan $TEST_REPO/bad_file
+  [ $status -eq 0 ]
+}
+
 @test "--recursive cannot be used with SCAN_*" {
   repo_run git-secrets --scan -r --cached
   [ $status -eq 1 ]
@@ -296,12 +320,12 @@ load test_helper
   [ $status -eq 1 ]
 }
 
-@test "-recursive is mutual exclusive with --scan" {
+@test "--recursive can be used with --scan" {
   repo_run git-secrets --scan -r
   [ $status -eq 0 ]
 }
 
-@test "-recursive can only be used with --scan" {
+@test "--recursive can't be used with --list" {
   repo_run git-secrets --list -r
   [ $status -eq 1 ]
 }
