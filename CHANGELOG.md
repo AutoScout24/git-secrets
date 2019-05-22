@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## 1.3.0 - 2019-02-10
+
+* Empty provider output is now excluded
+  (https://github.com/awslabs/git-secrets/issues/34)
+* Spaces are now supported in git exec path, making more Windows
+  paths execute properly.
+* Patterns with newlines and carriage returns are now loaded properly.
+* Patterns that contain only "\n" are now ignored.
+* Various Bash 4 fixes (https://github.com/awslabs/git-secrets/issues/66).
+* Make IAM key scanning much more targeted.
+
+## 1.2.1 - 2016-06-27
+
+* Fixed an issue where secret provider commands were causing "command not
+  found" errors due to a previously set IFS variable.
+  https://github.com/awslabs/git-secrets/pull/30
+
+## 1.2.0 - 2016-05-23
+
+* Fixed an issue where spaces files with spaces in their names were not being
+  properly scanned in the pre-commit hook.
+* Now ignoring empty lines and comments (e.g., `#`) in the .gitallowed file.
+* Fixed an issue where numbers were being compared to strings causing failures
+  on some platforms.
+
 ## 1.1.0 - 2016-04-06
 
 * Bug fix: the pre-commit hook previously only scanned the working directory

@@ -41,7 +41,7 @@ load test_helper
   [ $status -eq 0 ]
   # Ensure deleted files are filtered out of the grep
   rm $TEST_REPO/data.txt
-  echo 'aaa' $TEST_REPO/data_2.txt
+  echo 'aaa' > $TEST_REPO/data_2.txt
   run git add -A
   run git commit -m 'This is also fine'
   [ $status -eq 0 ]
@@ -56,4 +56,18 @@ load test_helper
   run git commit -m 'Contents are bad not the message'
   [ $status -eq 1 ]
   [ "${lines[0]}" == "failure1.txt:1:another line... forbidden" ]
+}
+
+@test "Rejects commits with prohibited patterns in changeset when AWS provider is enabled" {
+  setup_bad_repo
+  repo_run git-secrets --install $TEST_REPO
+  repo_run git-secrets --register-aws $TEST_REPO
+  cd $TEST_REPO
+  run git commit -m 'Contents are bad not the message'
+  [ $status -eq 1 ]
+  echo "${lines}" | grep -vq 'git secrets --aws-provider: command not found'
+
+  [ "${lines[0]}" == "data.txt:1:@todo more stuff" ]
+  [ "${lines[1]}" == "failure1.txt:1:another line... forbidden" ]
+  [ "${lines[2]}" == "failure2.txt:1:me" ]
 }
